@@ -1,19 +1,17 @@
 package org.example;
 
 import com.google.gson.Gson;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JSONWriter {
-
-    private static ObjectMapper mapper = new ObjectMapper();
 
     public static void saveNewEmployee(Employee employee) throws IOException {
         Gson gson = new Gson();
@@ -135,7 +133,7 @@ public class JSONWriter {
         }
     }
 
-    public static void saveNewCell(Cell cell) throws FileNotFoundException {
+    public static void saveNewCells(List<Cell> cells) throws FileNotFoundException {
         Gson gson = new Gson();
         File file = new File("cells.json");
         Type listType = new TypeToken<List<Cell>>(){}.getType();
@@ -145,7 +143,7 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        objects.add(cell);
+        objects.addAll(cells);
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
         } catch (IOException e) {
@@ -181,8 +179,14 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        Basket prevBasket = JSONReader.getBasketById(basket.getId());
-        objects.remove(prevBasket);
+        Basket prev = null;
+        for (Basket basket1: objects){
+            if (basket1.getId() == basket.getId()){
+                prev = basket1;
+                break;
+            }
+        }
+        objects.remove(prev);
         objects.add(basket);
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
@@ -201,9 +205,31 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        Cell prevCell = JSONReader.getCellById(cell.getId());
+        Cell prevCell = null;
+        for (Cell cell1: objects){
+            if (cell1.getId() == cell.getId()){
+                prevCell = cell1;
+                break;
+            }
+        }
         objects.remove(prevCell);
         objects.add(cell);
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(objects, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void saveModifiedCellsInStorage(LinkedList<Cell> cells) throws IOException {
+        int storageId = cells.get(0).getStorageId();
+        Gson gson = new Gson();
+        File file = new File("cells.json");
+        List<LinkedList<Cell>> allCellsByStorage = JSONReader.readCellsByStorageIds();
+        allCellsByStorage.set(storageId-1, cells);
+        List<Cell> objects = allCellsByStorage.stream()
+                .flatMap(LinkedList::stream)
+                .collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
         } catch (IOException e) {
@@ -221,8 +247,14 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        Consumer prevConsumer = JSONReader.getConsumerByFullname(consumer.getFullname());
-        objects.remove(prevConsumer);
+        Consumer prev = null;
+        for (Consumer element: objects){
+            if (element.getId() == consumer.getId()){
+                prev = element;
+                break;
+            }
+        }
+        objects.remove(prev);
         objects.add(consumer);
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
@@ -241,8 +273,14 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        Order prevOrder = JSONReader.getOrderById(order.getId());
-        objects.remove(prevOrder);
+        Order prev = null;
+        for (Order element: objects){
+            if (element.getId() == order.getId()){
+                prev = element;
+                break;
+            }
+        }
+        objects.remove(prev);
         objects.add(order);
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
@@ -261,8 +299,14 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        Salepoint prevSalepoint = JSONReader.getSalepointByCity(salepoint.getCity());
-        objects.remove(prevSalepoint);
+        Salepoint prev = null;
+        for (Salepoint element: objects){
+            if (element.getId() == salepoint.getId()){
+                prev = element;
+                break;
+            }
+        }
+        objects.remove(prev);
         objects.add(salepoint);
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
@@ -281,8 +325,14 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        Warehouse prevWarehouse = JSONReader.getWarehouseById(warehouse.getId());
-        objects.remove(prevWarehouse);
+        Warehouse prev = null;
+        for (Warehouse element: objects){
+            if (element.getId() == warehouse.getId()){
+                prev = element;
+                break;
+            }
+        }
+        objects.remove(prev);
         objects.add(warehouse);
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
@@ -291,7 +341,7 @@ public class JSONWriter {
         }
     }
 
-    public static void sdeleteSalepoint(Salepoint salepoint) throws FileNotFoundException {
+    public static void deleteSalepoint(Salepoint salepoint) throws FileNotFoundException {
         Gson gson = new Gson();
         File file = new File("salepoints.json");
         Type listType = new TypeToken<List<Salepoint>>(){}.getType();
@@ -301,13 +351,36 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        objects.remove(salepoint);
+        objects.removeIf(e -> e.getId() == salepoint.getId());
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public static void deleteAllCellsByStorageId(int storageId) throws FileNotFoundException {
+        Gson gson = new Gson();
+        File file = new File("cells.json");
+        Type listType = new TypeToken<List<Cell>>(){}.getType();
+        List<Cell> objects;
+        if (file.exists()) {
+            objects = gson.fromJson(new FileReader(file), listType);
+        } else {
+            objects = new ArrayList<>();
+        }
+        Iterator<Cell> iterator = objects.iterator();
+        while (iterator.hasNext()){
+            Cell cell = iterator.next();
+            if (cell.getStorageId() == storageId){
+                iterator.remove();
+            }
+        }
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(objects, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void deleteWarehouse(Warehouse warehouse) throws FileNotFoundException {
@@ -320,26 +393,67 @@ public class JSONWriter {
         } else {
             objects = new ArrayList<>();
         }
-        objects.add(warehouse);
+        objects.removeIf(e -> e.getId() == warehouse.getId());
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public static void deleteBoss(Boss boss) throws FileNotFoundException {
         Gson gson = new Gson();
         File file = new File("bosses.json");
         Type listType = new TypeToken<List<Boss>>(){}.getType();
-        List<Basket> objects;
+        List<Boss> objects;
         if (file.exists()) {
             objects = gson.fromJson(new FileReader(file), listType);
         } else {
             objects = new ArrayList<>();
         }
-        objects.remove(boss);
+        objects.removeIf(e -> e.getId() == boss.getId());
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(objects, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void deleteEmployee(Employee employee) throws FileNotFoundException {
+        Gson gson = new Gson();
+        File file = new File("employees.json");
+        Type listType = new TypeToken<List<Employee>>(){}.getType();
+        List<Employee> objects;
+        if (file.exists()) {
+            objects = gson.fromJson(new FileReader(file), listType);
+        } else {
+            objects = new ArrayList<>();
+        }
+        objects.removeIf(e -> e.getId() == employee.getId());
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(objects, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void deleteAllEmployeesByStorageId(int storageId) throws FileNotFoundException {
+        Gson gson = new Gson();
+        File file = new File("employees.json");
+        Type listType = new TypeToken<List<Employee>>(){}.getType();
+        List<Employee> objects;
+        if (file.exists()) {
+            objects = gson.fromJson(new FileReader(file), listType);
+        } else {
+            objects = new ArrayList<>();
+        }
+        Iterator<Employee> iterator = objects.iterator();
+        while (iterator.hasNext()){
+            Employee employee = iterator.next();
+            if (employee.getStorageId() == storageId){
+                iterator.remove();
+            }
+        }
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(objects, writer);
         } catch (IOException e) {

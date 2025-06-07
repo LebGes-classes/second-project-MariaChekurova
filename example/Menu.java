@@ -34,7 +34,7 @@ public class Menu {
         Scanner sc = new Scanner(System.in);
         System.out.println("Введите ФИО:");
         String fullname = sc.nextLine();
-        Consumer workingConsumer = null;
+        Consumer workingConsumer = new Consumer();
         if (JSONChecker.isInConsumers(fullname)) {
             workingConsumer = JSONReader.getConsumerByFullname(fullname);
         } else {
@@ -42,7 +42,7 @@ public class Menu {
                     "Введите свой город:");
             String city = sc.nextLine();
             if (JSONChecker.isValidCity(city)){
-                workingConsumer = new Consumer(fullname, city);
+                workingConsumer = Consumer.create(fullname, city);
             } else {
                 System.out.println("К сожалению, в этом городе пока не открыли пункт продаж");
             }

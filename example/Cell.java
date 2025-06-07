@@ -1,53 +1,92 @@
 package org.example;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
 public class Cell {
+    private static int currentId;
+
+    static {
+        try {
+            currentId = JSONReader.getNumberOfCells();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private int id;
+    @JsonProperty("isEmpty")
     private boolean isEmpty;
     private int productId;
     private int storageId;
-    private static int globalId = 1;
 
-    public Cell(int productId) {
-        this.id = globalId++;
-        this.isEmpty = false;
+
+    public Cell(@JsonProperty("id") int id,
+                @JsonProperty("productId") int productId,
+                @JsonProperty("storageId") int storageId) {
+        this.id = id;
         this.productId = productId;
+        if (productId != 0){
+            this.isEmpty = false;
+        } else {
+            this.isEmpty = true;
+        }
+        this.storageId = storageId;
     }
 
-    public Cell(int id, int productId, int storageId) {
+    @JsonCreator
+    public Cell(@JsonProperty("id") int id,
+                @JsonProperty("productId") int productId,
+                @JsonProperty("storageId") int storageId,
+                @JsonProperty("isEmpty") boolean isEmpty) {
         this.id = id;
-        this.isEmpty = false;
         this.productId = productId;
+        this.isEmpty = isEmpty;
         this.storageId = storageId;
     }
 
     public Cell() {
-        this.id = globalId++;
+        this.id = currentId+1;
         this.isEmpty = true;
         this.productId = 0;
         this.storageId = 0;
-    }
-    /// методы которые создают нровый экземпляр класа и добавляют его в json
-    public static Cell create (int productId) throws FileNotFoundException {
-        Cell cell = new Cell(productId);
-        JSONWriter.saveNewCell(cell);
-        return cell;
+       // currentId++;
     }
 
-    public static Cell create (int id, int productId, int storageId) throws FileNotFoundException {
+    public Cell(int storageId) {
+        this.id = currentId+1;
+        this.isEmpty = true;
+        this.productId = 0;
+        this.storageId = storageId;
+        currentId++;
+    }
+
+    /// методы которые создают нровый экземпляр класа и добавляют его в json
+
+    /**public static Cell create (int id, int productId, int storageId) throws FileNotFoundException {
         Cell cell = new Cell(id, productId, storageId);
         JSONWriter.saveNewCell(cell);
+        currentId++;
         return cell;
     }
 
     public static Cell create () throws FileNotFoundException {
         Cell cell = new Cell();
         JSONWriter.saveNewCell(cell);
+        currentId++;
         return cell;
     }
+
+    public static Cell create (int storageId) throws FileNotFoundException {
+        Cell cell = new Cell(storageId);
+        JSONWriter.saveNewCell(cell);
+        currentId++;
+        return cell;
+    }**/
 
     public int getId() {
         return id;
@@ -57,16 +96,8 @@ public class Cell {
         return isEmpty;
     }
 
-    public boolean geisEmpty() {
-        return isEmpty;
-    }
-
     public int getProductId() {
         return productId;
-    }
-
-    public static int getGlobalId() {
-        return globalId;
     }
 
     public void setId(int id) {
@@ -74,12 +105,15 @@ public class Cell {
     }
 
     public void setEmpty(boolean empty) {
-        isEmpty = empty;
+        this.isEmpty = empty;
     }
 
     public void setProductId(int productId) {
         this.productId = productId;
-        this.isEmpty = false;
+        if (productId != 0){
+            this.isEmpty = false;
+        }
+        //когда добавляется товар в ячейку, у нее сохраняются изменения в json
     }
 
     public int getStorageId() {
@@ -90,13 +124,9 @@ public class Cell {
         this.storageId = storageId;
     }
 
-    public static Cell getEmptyCellByStorageId(int storageId) throws IOException {
-        List<Cell> cells = JSONReader.readCells();
-        for (Cell cell: cells){
-            if (cell.getStorageId() == storageId && cell.isEmpty){
-                return cell;
-            }
-        }
-        return null;
+    public void addProductToCell(int productId) throws IOException {
+        setEmpty(false);
+        setProductId(productId);
+        JSONWriter.saveModifiedCell(this);
     }
 }

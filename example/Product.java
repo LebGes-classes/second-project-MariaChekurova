@@ -9,6 +9,13 @@ public class Product {
     private int priceForConsumer;
     private int priceForSalePoint;
 
+    public Product() {
+        this.id = 0;
+        this.name = null;
+        this.priceForConsumer = 0;
+        this.priceForSalePoint = 0;
+    }
+
     public Product(int id, String name, int priceForConsumer, int priceForSalePoint) {
         this.id = id;
         this.name = name;
@@ -52,15 +59,5 @@ public class Product {
 
     public void setPriceForSalePoint(int priceForSalePoint) {
         this.priceForSalePoint = priceForSalePoint;
-    }
-
-    public static Product getProductById(int id) throws IOException {
-        List<Product> list = JSONReader.readProducts();
-        for (Product product: list){
-            if (product.getId() == id){
-                return product;
-            }
-        }
-        return null;
     }
 }

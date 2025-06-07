@@ -24,16 +24,6 @@ public class JSONChecker {
         return false;
     }
 
-    public static boolean isInEmployees(String fullname) throws IOException {
-        List<Employee> list = JSONReader.readEmployees();
-        for (Employee employee: list){
-            if (employee.getFullName().equals(fullname)){
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static boolean isValidCity(String city) throws IOException {
         List<Storage> storageList = JSONReader.readWarehouses();
         storageList.addAll(JSONReader.readSalepoints());
@@ -59,6 +49,16 @@ public class JSONChecker {
         List<Product> products = JSONReader.getBasketById(basketId).getProducts();
         for (Product product: products){
             if (product.getId() == productId){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean ifConsumerMadeOrders (Consumer consumer) throws IOException {
+        List<Order> orderList = JSONReader.readOrders();
+        for (Order order: orderList){
+            if (consumer.getOrderIds().contains(order.getId())){
                 return true;
             }
         }

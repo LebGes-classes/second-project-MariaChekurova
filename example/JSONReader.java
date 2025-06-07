@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class JSONReader {
@@ -26,6 +29,20 @@ public class JSONReader {
         File file = new File("cells.json");
         List<Cell> cellList = objectMapper.readValue(file, new TypeReference<>(){});
         return cellList;
+    }
+
+    static List<LinkedList<Cell>> readCellsByStorageIds() throws IOException {
+        File file = new File("cells.json");
+        List<Cell> cellList = objectMapper.readValue(file, new TypeReference<>(){});
+        List<LinkedList<Cell>> cellsByStorageIds = new ArrayList<>();
+        for (int i = 0; i < Storage.getCurrentId(); i++){
+            cellsByStorageIds.add(new LinkedList<>());
+        }
+        for (Cell cell: cellList){
+            int storageId = cell.getStorageId();
+            cellsByStorageIds.get(storageId-1).add(cell);
+        }
+        return cellsByStorageIds;
     }
 
     static List readEmployees() throws IOException {
@@ -114,6 +131,16 @@ public class JSONReader {
         return null;
     }
 
+    public static Employee getEmployeeById(int employeeId) throws IOException {
+        List<Employee> list = readEmployees();
+        for (Employee employee: list){
+            if (employee.getId() == employeeId){
+                return employee;
+            }
+        }
+        return null;
+    }
+
     public static Order getOrderById(int orderId) throws IOException {
         List<Order> list = readOrders();
         for (Order order: list){
@@ -124,21 +151,90 @@ public class JSONReader {
         return null;
     }
 
-    public static Cell getCellById(int cellId) throws IOException {
-        List<Cell> list = readCells();
-        for (Cell cell: list){
-            if (cell.getId() == cellId){
-                return cell;
-            }
-        }
-        return null;
-    }
-
     public static Warehouse getWarehouseById(int warehouseId) throws IOException {
         List<Warehouse> list = readWarehouses();
         for (Warehouse warehouse: list){
             if (warehouse.getId() == warehouseId){
                 return warehouse;
+            }
+        }
+        return null;
+    }
+
+    public static Storage getStorageById(int storageId) throws IOException {
+        List<Storage> list = readWarehouses();
+        list.addAll(readSalepoints());
+        for (Storage storage: list){
+            if (storage.getId() == storageId){
+                return storage;
+            }
+        }
+        return null;
+    }
+
+    public static int getNumberOfConsumers() throws IOException {
+        try {
+            return readConsumers().size();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    public static int getNumberOfStorages() throws IOException {
+        try {
+            List<Storage> list = readSalepoints();
+            list.addAll(readWarehouses());
+            return list.size();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    public static int getNumberOfEmployees() throws IOException {
+        try {
+            return readEmployees().size();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    public static int getNumberOfOrders() throws IOException {
+        try {
+            return readOrders().size();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    public static int getNumberOfCells() throws IOException {
+        try {
+            return readCells().size();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    public static int getProductQuantityById(int productId) throws IOException {
+        List<Integer> warehouseIds = new ArrayList<>();
+        List<Warehouse> warehouses = JSONReader.readWarehouses();
+        int quantity = 0;
+        for (Warehouse warehouse: warehouses){
+            warehouseIds.add(warehouse.getId());
+        }
+        List<Cell> cells = JSONReader.readCells();
+        for (Cell cell: cells){
+            if (warehouseIds.contains(cell.getStorageId()) && cell.getProductId() == productId) {
+                quantity++;
+            }
+        }
+        return quantity;
+    }
+
+    public static Boss getBossByStorageId(int storageId) throws IOException {
+        List<Boss> bossList = readBosses();
+        for (Boss boss: bossList){
+            if (boss.getStorageId() == storageId){
+                return boss;
             }
         }
         return null;

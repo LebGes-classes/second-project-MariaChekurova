@@ -5,23 +5,15 @@ import java.util.List;
 
 public class ProductContainer {
     protected int id;
-    protected List<Product> products;       //потом заменить на лист id продуктов
+    protected List<Product> products;
     protected int numberOfProducts;
     protected int amount;
-    protected static int globalId = 1;
-
-    public ProductContainer(List<Product> products) {
-        this.products = products;
-        this.amount = getListOfProductAmount(products);
-        this.numberOfProducts = products.size();
-        this.id = globalId++;
-    }
 
     public ProductContainer() {
         this.products = new ArrayList<>();
         this.amount = 0;
         this.numberOfProducts = 0;
-        this.id = globalId++;
+        this.id = (int) (System.currentTimeMillis() % Integer.MAX_VALUE) + 1;
     }
 
     public ProductContainer(int id) {
@@ -29,7 +21,6 @@ public class ProductContainer {
         this.amount = 0;
         this.numberOfProducts = 0;
         this.id = id;
-        globalId++;
     }
 
     public int getId() {
@@ -48,9 +39,6 @@ public class ProductContainer {
         return amount;
     }
 
-    public static int getGlobalId() {
-        return globalId;
-    }
 
     public void setId(int id) {
         this.id = id;
@@ -69,14 +57,6 @@ public class ProductContainer {
     }
 
     public static int getListOfProductAmount (List<Product> products) {
-        int amount = 0;
-        for (Product product: products){
-            amount += product.getPriceForConsumer();
-        }
-        return amount;
-    }
-
-    public int getProductContainerAmount () {
         int amount = 0;
         for (Product product: products){
             amount += product.getPriceForConsumer();
